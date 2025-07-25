@@ -1,0 +1,376 @@
+{
+  "name": "Video Idea to Social Media Post",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "3f8a6b53-2b2b-42f8-a06a-873449659d1a",
+      "name": "Start",
+      "type": "n8n-nodes-base.start",
+      "typeVersion": 1,
+      "position": [
+        240,
+        640
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "video-idea-submission",
+        "options": {}
+      },
+      "id": "3c8b0a0a-b5b1-4f7f-8b5a-8e8e8e8e8e8e",
+      "name": "On form submission",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        460,
+        540
+      ],
+      "webhookId": "your-webhook-id-1"
+    },
+    {
+      "parameters": {
+        "model": "openAiChat",
+        "prompt": "Based on the following video idea, generate a short, cinematic, and viral-ready video prompt for a text-to-video model like Veo3. The idea is: {{ $json.body.idea }}",
+        "options": {}
+      },
+      "id": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+      "name": "Prompt AI Agent",
+      "type": "n8n-nodes-langchain.agentCallback",
+      "typeVersion": 1,
+      "position": [
+        700,
+        540
+      ]
+    },
+    {
+      "parameters": {
+        "modelId": "gpt-4o",
+        "options": {}
+      },
+      "id": "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e",
+      "name": "OpenAI Chat Model",
+      "type": "n8n-nodes-base.openAiChat",
+      "typeVersion": 3,
+      "position": [
+        700,
+        740
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "YOUR_OPENAI_CREDENTIAL_ID",
+          "name": "Your OpenAI Credential"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": "YOUR_GOOGLE_SHEET_ID",
+        "sheetName": "Sheet1",
+        "fields": {
+          "columns": [
+            {
+              "values": [
+                "{{ $json.body.idea }}",
+                "{{ $node[\"Prompt AI Agent\"].json.text }}",
+                "Pending Approval"
+              ]
+            }
+          ]
+        }
+      },
+      "id": "c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f",
+      "name": "Save Idea to Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [
+        940,
+        540
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YOUR_GOOGLE_SHEETS_CREDENTIAL_ID",
+          "name": "Your Google Sheets Credential"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const sheetRow = $node[\"Save Idea to Sheet\"].json.updatedRange;\nconst prompt = $node[\"Prompt AI Agent\"].json.text;\n\n$set(\"slackMessage\", `New video idea ready for approval (Sheet Ref: ${sheetRow}):\\n\\n>${prompt}\\n\\nReact with ✅ to approve or ❌ to reject.`);\n$set(\"sheetRowRef\", sheetRow);"
+      },
+      "id": "d4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8g",
+      "name": "Code",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1160,
+        540
+      ]
+    },
+    {
+      "parameters": {
+        "channel": "YOUR_SLACK_CHANNEL_ID",
+        "text": "{{ $node[\"Code\"].json.slackMessage }}",
+        "otherOptions": {
+          "unfurl_links": false
+        }
+      },
+      "id": "e5f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8g9h",
+      "name": "Send for Approval",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 3,
+      "position": [
+        1380,
+        540
+      ],
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "YOUR_SLACK_CREDENTIAL_ID",
+          "name": "Your Slack Credential"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "events": "reaction_added",
+        "otherOptions": {
+          "reaction": "white_check_mark"
+        }
+      },
+      "id": "f6a7b8c9-d0e1-4f2a-3b4c-5d6e7f8g9h0i",
+      "name": "Slack Trigger",
+      "type": "n8n-nodes-base.slackTrigger",
+      "typeVersion": 2,
+      "position": [
+        460,
+        1080
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://api.replicate.com/v1/predictions",
+        "authentication": "headerAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "json": {
+            "version": "YOUR_REPLICATE_VEO3_MODEL_VERSION",
+            "input": {
+              "prompt": "{{ $node[\"Slack Trigger\"].json.message.text.split('>')[1].split('\n')[0].trim() }}"
+            }
+          }
+        },
+        "options": {}
+      },
+      "id": "a7b8c9d0-e1f2-4a3b-4c5d-6e7f8g9h0i1j",
+      "name": "Create Video",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        700,
+        1080
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "YOUR_REPLICATE_CREDENTIAL_ID",
+          "name": "Replicate API Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "time": 30,
+        "unit": "seconds"
+      },
+      "id": "b8c9d0e1-f2a3-4b4c-5d6e-7f8g9h0i1j2k",
+      "name": "Wait",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 2,
+      "position": [
+        940,
+        1080
+      ]
+    },
+    {
+      "parameters": {
+        "url": "{{ $node[\"Create Video\"].json.urls.get }}",
+        "authentication": "headerAuth",
+        "options": {}
+      },
+      "id": "c9d0e1f2-a3b4-4c5d-6e7f-8g9h0i1j2k3l",
+      "name": "Get Video",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        1160,
+        1080
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "YOUR_REPLICATE_CREDENTIAL_ID",
+          "name": "Replicate API Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "{{ $node[\"Get Video\"].json.status }}",
+              "operation": "equal",
+              "value2": "succeeded"
+            }
+          ]
+        }
+      },
+      "id": "d0e1f2a3-b4c5-4d6e-7f8g-9h0i1j2k3l4m",
+      "name": "If",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        1380,
+        1080
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": "YOUR_GOOGLE_SHEET_ID",
+        "sheetName": "{{ $node[\"Slack Trigger\"].json.message.text.split('Sheet Ref: ')[1].split(')')[0].split('!')[0] }}",
+        "range": "D{{ $node[\"Slack Trigger\"].json.message.text.split('!A')[1].split(':')[0] }}",
+        "fields": {
+          "values": [
+            "{{ $node[\"Get Video\"].json.output[0] }}"
+          ]
+        }
+      },
+      "id": "e1f2a3b4-c5d6-4e7f-8g9h-0i1j2k3l4m5n",
+      "name": "Add Video To Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [
+        1600,
+        1080
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YOUR_GOOGLE_SHEETS_CREDENTIAL_ID",
+          "name": "Your Google Sheets Credential"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Prompt AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prompt AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Save Idea to Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Idea to Sheet": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Send for Approval",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slack Trigger": {
+      "main": [
+        [
+          {
+            "node": "Create Video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Video": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Get Video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Video": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Add Video To Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prompt AI Agent": {
+      "model": [
+        [
+          {
+            "node": "OpenAI Chat Model",
+            "type": "model",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}
