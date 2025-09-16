@@ -330,7 +330,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-latest:generateContent?key=AIzaSyDCmKXGMwIhryyA6u0ly90oJsNUTBIHD4w",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-latest:generateContent?key=xxx",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={\n  \"contents\": [\n    {\n      \"parts\": [\n        {\n          \"text\": \"Please transcribe the audio from the attached video. Provide only the text of the transcription, without any extra formatting or introductory phrases.\"\n        },\n        {\n          \"inline_data\": {\n            \"mime_type\": \"video/mp4\",\n            \"data\": \"{{ $binary.data.toBase64() }}\"\n          }\n        }\n      ]\n    }\n  ]\n}",
