@@ -1,0 +1,410 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "edb6de30-d58e-4613-9f0b-0ac21bb21c67",
+              "leftValue": "={{ $json[\"素材类型\"] }}",
+              "rightValue": "链接",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "0426e29d-bf13-455c-bd06-c7b26ec49556",
+      "name": "判断输入类型",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -832,
+        -48
+      ]
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "sourceMaterial",
+              "value": "={{ $json.sourceText }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "904976d9-ed54-4669-9b44-66120036d2db",
+      "name": "设置输入文本为素材",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [
+        -464,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// 获取上一个节点传入的原始文本\nlet text = $input.first().json.data.markdown;\n\n// 1. 移除所有Markdown图片标签，例如 ![Image](...)\ntext = text.replace(/\\!\\[.*?\\]\\(.*?\\)/g, '');\n\n// 2. 移除所有Markdown链接，但保留链接文本，例如 [link text](URL) -> link text\ntext = text.replace(/\\[(.*?)\\]\\(.*?\\)/g, '$1');\n\n// 3. 移除微信文章特有的噪音和页脚信息\nconst noise = [\n  'Original',\n  '预览时标签不可点',\n  '微信扫一扫赞赏作者',\n  '赞赏后展示我的头像',\n  'Like the Author',\n  'Other Amount',\n  '最低赞赏',\n  'Comment',\n  'Send Message',\n  '写留言:',\n  'Scan to Follow',\n  '继续滑动看下一个',\n  '轻触阅读原文',\n  '向上滑动看下一个',\n  '当前内容可能存在未经审核的第三方商业营销信息，请确认是否继续访问。',\n  '继续访问Cancel',\n  'Got It',\n  '可在「公众号 > 右上角 > 划线」找到划线过的内容',\n  '风险提示',\n  'OK',\n  'Back',\n  'Close',\n  '更多',\n  'Submit',\n  '表情',\n  '关闭',\n  '确认提交投诉',\n  '你可以补充投诉原因（选填）',\n  '确定',\n  'Name cleared',\n  'No articles',\n  'Articles'\n];\nconst noiseRegex = new RegExp(noise.join('|'), 'g');\ntext = text.replace(noiseRegex, '');\n\n// 4. 移除所有独立的URL链接\ntext = text.replace(/https?:\\/\\/[^\\s]+/g, '');\n\n// 5. 移除XML/SVG格式的占位符\ntext = text.replace(/<svg[\\s\\S]*?<\\/svg>/g, '');\n\n// 6. 将多个换行符合并为一个，并清理多余的空格\ntext = text.replace(/\\n{3,}/g, '\\n\\n'); // 最多保留两个换行符\ntext = text.replace(/^[\\s\\n]+|[\\s\\n]+$/g, ''); // 移除开头和结尾的空白\n\n// 返回清洗后的结果\nreturn { cleanedText: text };\n"
+      },
+      "id": "cff0d7ed-ae11-485d-9e8a-f81fbad23e2f",
+      "name": "清洗文本内容",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -352,
+        -160
+      ]
+    },
+    {
+      "parameters": {
+        "formTitle": "请输入播客原始素材",
+        "formDescription": "直接粘贴文本，或者链接",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "素材类型",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "文本"
+                  },
+                  {
+                    "option": "链接"
+                  }
+                ]
+              }
+            },
+            {
+              "fieldLabel": "素材内容",
+              "fieldType": "textarea"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        -1024,
+        -48
+      ],
+      "id": "10ce7051-437d-4468-a75b-d74bb0afb0ff",
+      "name": "提供素材",
+      "webhookId": "99a17cf5-0219-4867-9954-bc8319d05563"
+    },
+    {
+      "parameters": {
+        "operation": "scrape",
+        "url": "={{ $json[\"素材内容\"] }}",
+        "requestOptions": {}
+      },
+      "type": "@mendable/n8n-nodes-firecrawl.firecrawl",
+      "typeVersion": 1,
+      "position": [
+        -576,
+        -160
+      ],
+      "id": "dea14dcd-a640-44ec-917a-775591fcb055",
+      "name": "爬取网页内容",
+      "credentials": {
+        "firecrawlApi": {
+          "id": "wDlUOYsC2NClmYIO",
+          "name": "Firecrawl account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "prompt",
+              "value": "=You are an expert podcast producer for a 5-minute daily AI news podcast called \"MapleTalk | AI进行时\". Your role is to transform raw source material into a complete, ready-to-publish podcast episode package.\n\nThe podcast's tone is: conversational, energetic, insightful, and easy for a non-technical audience to understand. Use storytelling, analogies, and emotional cues. Avoid jargon. The script should feel like a friend sharing exciting news, not a news report.\n\nThe user has provided the following source material:\n---\n{{ $json.cleanedText }}\n---\n\nBased on this material, generate a JSON object with the following structure. Do NOT output anything other than the JSON object itself.All output is in Chinese.\n\n{\n  \"titles\": [\n    \"A catchy, dramatic title for the episode.\",\n    \"A second catchy title, perhaps with a question.\",\n    \"A third catchy title, perhaps using numbers or a strong statement.\"\n  ],\n  \"script\": \"A complete, 5-minute conversational podcast script. Start with an energetic greeting. Use storytelling and analogies to explain the core concepts from the source material. The tone should be enthusiastic and insightful. End with a concluding thought and a friendly sign-off.About 1200 chinese words\",\n  \"shownote\": \"A complete shownote for the 小宇宙 platform. It must follow this exact Markdown structure:\\n\\n### 引子\\n\\nA short, enticing introduction summarizing the episode's key takeaway in 3-5 sentences, within 300 chinese words.\n\n🎵本期的 BGM\nMinimalist Electronic\n\n📇关于【MapleTalk | AI进行时】\n这是一档让你用“刷牙的功夫跟上AI浪潮”的快闪播客。\n每个工作日清晨，主播们会为你带来5分钟的“AI早餐简报”，用最有趣的大白话，为你精选全球最新、最有料的AI动态，让你轻松成为朋友圈最懂AI的那个“弄潮儿”。\n欢迎订阅，不错过每一次的AI进化瞬间！\n\n🍁关于播客主理人\n嗨，我是 MapleShaw，一个乐于分享的科技爱好者，致力于用最简单的方式，让你看懂最前沿的未来。\n你也可以在这些地方找到我，欢迎来围观和交流：\nX (Twitter): @msjiaozhu\n小红书: MapleShaw\",\n  \"bgmSuggestion\": \"Suggest a specific music style (e.g., 'Uplifting Lofi-Hiphop', 'Minimalist Electronic Beat') and provide a fictional example track name to inspire the user.\"\n}\n"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c7962b08-9bab-4037-ab13-0e681a23f592",
+      "name": "准备AI指令",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [
+        -112,
+        -48
+      ]
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash-preview-05-20",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash-preview-05-20"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "={{ $json.prompt }}"
+            }
+          ]
+        },
+        "jsonOutput": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        96,
+        -48
+      ],
+      "id": "68ca6c26-3598-4831-b640-8c609b2a9330",
+      "name": "Gemini 生成内容",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "mZXaguDyNenhYh5g",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const contentString = $input.first().json.content.parts[0].text;\nconst parsedContent = JSON.parse(contentString);\n\nreturn parsedContent;"
+      },
+      "id": "3a0454aa-406f-4bea-9cb4-91dc2f965997",
+      "name": "解析AI结果",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        432,
+        -48
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1TlIARTuxosSiQ5QJId9YNwUNermivl3viYjSIAZdf_Q",
+          "mode": "list",
+          "cachedResultName": "小宇宙播客内容",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1TlIARTuxosSiQ5QJId9YNwUNermivl3viYjSIAZdf_Q/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "工作表1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1TlIARTuxosSiQ5QJId9YNwUNermivl3viYjSIAZdf_Q/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "title": "=1️⃣{{ $json.titles[0] }}\n2️⃣{{ $json.titles[1] }}\n3️⃣{{ $json.titles[2] }}",
+            "script": "={{ $json.script }}",
+            "shownote": "={{ $json.shownote }}",
+            "bgmSuggestion": "={{ $json.bgmSuggestion }}",
+            "date": "={{ $now.format('yyyy-MM-dd') }}",
+            "id": "={{ $now.toMillis() }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "title",
+              "displayName": "title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "script",
+              "displayName": "script",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "shownote",
+              "displayName": "shownote",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "bgmSuggestion",
+              "displayName": "bgmSuggestion",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "date",
+              "displayName": "date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        656,
+        -48
+      ],
+      "id": "ada9e8f1-57dd-4162-9f35-187909e5b73b",
+      "name": "更新至 Google 表格",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "dDXOM5NEA8kutXBF",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "判断输入类型": {
+      "main": [
+        [
+          {
+            "node": "爬取网页内容",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "设置输入文本为素材",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "设置输入文本为素材": {
+      "main": [
+        [
+          {
+            "node": "准备AI指令",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "清洗文本内容": {
+      "main": [
+        [
+          {
+            "node": "准备AI指令",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "提供素材": {
+      "main": [
+        [
+          {
+            "node": "判断输入类型",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "爬取网页内容": {
+      "main": [
+        [
+          {
+            "node": "清洗文本内容",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "准备AI指令": {
+      "main": [
+        [
+          {
+            "node": "Gemini 生成内容",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini 生成内容": {
+      "main": [
+        [
+          {
+            "node": "解析AI结果",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "解析AI结果": {
+      "main": [
+        [
+          {
+            "node": "更新至 Google 表格",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "9d759523d489cdc6a12d1d955972ae44ecb39da734f80a8e3abdbd12fbacf3eb"
+  }
+}

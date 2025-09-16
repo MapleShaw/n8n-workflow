@@ -1,0 +1,241 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {
+          "download": true
+        }
+      },
+      "id": "87093446-9d60-4753-b993-69b7b2244eb0",
+      "name": "Get the Image",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "position": [
+        992,
+        304
+      ],
+      "webhookId": "8404b32c-14bd-428e-88a6-560755f0f7ba",
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Get the Image').item.json.message.chat.id }}",
+        "text": "={{ $json.content }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "781c4872-d67d-44bd-8344-4eab1cbc10f4",
+      "name": "Send Content for the Analyzed image",
+      "type": "n8n-nodes-base.telegram",
+      "position": [
+        1728,
+        192
+      ],
+      "typeVersion": 1.1,
+      "webhookId": "6e8d3e52-334d-4167-ac7a-a2db33853584"
+    },
+    {
+      "parameters": {
+        "content": "# Automated Image Analysis and Response via Telegram\n\n## Example: @SubAlertMe_Bot\n\n## Summary:\nThe automated image analysis and response workflow using n8n is a sophisticated solution designed to streamline the process of analyzing images sent via Telegram and delivering insightful responses based on the analysis outcomes. This cutting-edge workflow employs a series of meticulously orchestrated nodes to ensure seamless automation and efficiency in image processing tasks.\n\n## Use Cases:\nThis advanced workflow caters to a myriad of scenarios where real-time image analysis and response mechanisms are paramount. The use cases include:\n- Providing immediate feedback on images shared within Telegram groups.\n- Enabling automated content moderation based on the analysis of image content.\n- Facilitating rapid categorization and tagging of images based on the results of the analysis.\n\n## Detailed Workflow Setup:\nTo effectively implement this workflow, users must adhere to a meticulous setup process, which includes:\n- Access to the versatile n8n platform, ensuring seamless workflow orchestration.\n- Integration of a Telegram account to facilitate image reception and communication.\n- Utilization of an OpenAI account for sophisticated image analysis capabilities.\n- Configuration of Telegram and OpenAI credentials within the n8n environment for seamless integration.\n- Proficiency in creating and interconnecting nodes within the n8n workflow for optimal functionality.\n\n## Detailed Node Description:\n1. **Get the Image (Telegram Trigger):**\n - Actively triggers upon receipt of an image via Telegram, ensuring prompt processing.\n - Extracts essential information from the received image message to initiate further actions.\n\n2. **Merge all fields To get data from trigger:**\n - Seamlessly amalgamates all relevant data fields extracted from the trigger node for comprehensive data consolidation.\n\n3. **Analyze Image (OpenAI):**\n - Harnesses the powerful capabilities of OpenAI services to conduct in-depth analysis of the received image.\n - Processes the image data in base64 format to derive meaningful insights from the visual content.\n\n4. **Aggregate all fields:**\n - Compiles and consolidates all data items for subsequent processing and analysis, ensuring comprehensive data aggregation.\n\n5. **Send Content for the Analyzed Image (Telegram):**\n - Transmits the analyzed content back to the Telegram chat interface for seamless communication.\n - Delivers the analyzed information in textual format, enhancing user understanding and interaction.\n\n6. **Switch Node:**\n - The Switch node is pivotal for decision-making based on predefined conditions within the workflow.\n - It evaluates incoming data to determine the existence or absence of specific elements, such as images in this context.\n - Utilizes a set of rules to assess the presence of image data in the message payload and distinguishes between cases where images are detected and when they are not.\n - This crucial node plays a pivotal role in directing the flow of the workflow based on the outcomes of its evaluations.\n\n\n\n## Conclusion:\nThe automation of image analysis processes through this sophisticated workflow not only enhances operational efficiency but also revolutionizes communication dynamics within Telegram interactions. By incorporating this advanced workflow solution, users can optimize their image analysis workflows, bolster communication efficacy, and unlock new levels of automation in image processing tasks.\n",
+        "height": 1361.9843517631348,
+        "width": 1235.4238259410247
+      },
+      "id": "23c33b1e-7eda-4408-8bf4-302f2add0336",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -288,
+        -224
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.message.chat.id }}",
+        "text": "Please Upload an Image ....",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "7dcdef56-a118-4704-a02e-e52563bcea52",
+      "name": "Update Telegram Error Message",
+      "type": "n8n-nodes-base.telegram",
+      "position": [
+        1728,
+        432
+      ],
+      "typeVersion": 1.1,
+      "webhookId": "591a9423-8429-469f-9941-94604084d506"
+    },
+    {
+      "parameters": {
+        "amount": 3
+      },
+      "id": "886ea93e-e331-40d3-a285-7da4b0d6a89d",
+      "name": "Wait",
+      "type": "n8n-nodes-base.wait",
+      "position": [
+        1520,
+        432
+      ],
+      "webhookId": "d4d6fc13-d8ad-42b6-b4dd-e922b5534282",
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {
+        "content": "",
+        "height": 1359.6943046286056,
+        "width": 1139.7707284714515,
+        "color": 4
+      },
+      "id": "8a565737-1ea5-438a-aed3-7a7127fc1b7d",
+      "name": "Sticky Note1",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        960,
+        -224
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "inputType": "base64",
+        "options": {}
+      },
+      "id": "ca68affa-311f-4e4a-8038-06a262612cb0",
+      "name": "Analyze image",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "position": [
+        1520,
+        192
+      ],
+      "typeVersion": 1.3
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "leftValue": "",
+                  "caseSensitive": true,
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "operator": {
+                      "type": "array",
+                      "operation": "exists",
+                      "singleValue": true
+                    },
+                    "leftValue": "={{ $json.message.photo }}",
+                    "rightValue": ""
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "Image"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "leftValue": "",
+                  "caseSensitive": true,
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "3fe3a96d-6ee9-4f12-a32c-f5f5b729e257",
+                    "operator": {
+                      "type": "array",
+                      "operation": "notExists",
+                      "singleValue": true
+                    },
+                    "leftValue": "={{ $json.message.photo }}",
+                    "rightValue": ""
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "Empty"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "29edcf4d-0d13-438b-a686-a11fd0fb8701",
+      "name": "Switch ( image or not )",
+      "type": "n8n-nodes-base.switch",
+      "position": [
+        1168,
+        304
+      ],
+      "typeVersion": 3
+    }
+  ],
+  "connections": {
+    "Get the Image": {
+      "main": [
+        [
+          {
+            "node": "Switch ( image or not )",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Update Telegram Error Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze image": {
+      "main": [
+        [
+          {
+            "node": "Send Content for the Analyzed image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch ( image or not )": {
+      "main": [
+        [
+          {
+            "node": "Analyze image",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "instanceId": "9d759523d489cdc6a12d1d955972ae44ecb39da734f80a8e3abdbd12fbacf3eb"
+  }
+}

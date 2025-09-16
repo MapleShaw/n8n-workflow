@@ -1,0 +1,163 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "htmlValue": "={{ $json.html }}"
+      },
+      "type": "n8n-nodes-edgeone-pages.edgeonePagesHtmlDeploy",
+      "typeVersion": 1,
+      "position": [
+        464,
+        -160
+      ],
+      "id": "fc9b7944-8b45-486b-93f3-219337576a96",
+      "name": "EdgeOne Pages HTML Deploy"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 处理Gemini直接生成的HTML结果\nconst response = $input.first().json;\nlet generatedHTML = response.candidates[0].content.parts[0].text;\n\n// 清理生成的HTML\ngeneratedHTML = generatedHTML.replace(/```html\\s*/gi, '').replace(/```\\s*$/gi, '');\ngeneratedHTML = generatedHTML.replace(/```\\s*/g, '').replace(/```\\s*$/g, '');\ngeneratedHTML = generatedHTML.trim();\n\n// 强制压缩HTML\ngeneratedHTML = generatedHTML.replace(/\\r\\n/g, ' ').replace(/\\n/g, ' ').replace(/\\r/g, ' ');\ngeneratedHTML = generatedHTML.replace(/\\t/g, ' ');\ngeneratedHTML = generatedHTML.replace(/\\s+/g, ' ');\ngeneratedHTML = generatedHTML.replace(/> </g, '><');\ngeneratedHTML = generatedHTML.replace(/;\\s+/g, ';').replace(/:\\s+/g, ':').replace(/,\\s+/g, ',');\ngeneratedHTML = generatedHTML.replace(/\\/\\*[^*]*\\*+(?:[^/*][^*]*\\*+)*\\//g, '');\ngeneratedHTML = generatedHTML.trim();\n\n// 创建文件名\nconst timestamp = new Date().toISOString().slice(0, 19).replace(/[:.]/g, '-');\nconst originalFileName = $('Prepare PDF Analysis').first().json.fileName || 'financial-report';\nconst cleanFileName = originalFileName.replace(/\\.pdf$/i, '').replace(/[^a-zA-Z0-9-_]/g, '-');\nconst filename = `${cleanFileName}-analysis-${timestamp}.html`;\n\n// 创建下载链接\nconst dataUrl = 'data:text/html;charset=utf-8,' + encodeURIComponent(generatedHTML);\n\n// 计算压缩效果\nconst originalSize = response.candidates[0].content.parts[0].text.length;\nconst compressedSize = generatedHTML.length;\nconst compressionRatio = ((originalSize - compressedSize) / originalSize * 100).toFixed(1);\n\nreturn {\n  json: {\n    html: generatedHTML,\n    filename: filename,\n    downloadUrl: dataUrl,\n    status: 'success',\n    message: '🎉 PDF财报分析网页生成成功！腾讯蓝主题+Bento Grid设计',\n    processingInfo: {\n      method: 'Direct PDF to HTML via Gemini 2.0',\n      originalFileName: originalFileName,\n      outputFileName: filename,\n      processingTime: 'Single API call'\n    },\n    compressionInfo: {\n      originalSize: originalSize,\n      compressedSize: compressedSize,\n      compressionRatio: compressionRatio + '%',\n      note: '已移除所有换行符和多余空白'\n    },\n    instructions: {\n      method1: '直接复制上面html字段的内容，粘贴到.html文件',\n      method2: '点击downloadUrl链接，右键保存网页',\n      note: '包含PDF分析+Framer Motion动效+TailwindCSS样式+财报数据可视化'\n    },\n    preview: generatedHTML.substring(0, 200) + '...'\n  }\n};"
+      },
+      "id": "9c80e8d4-bc20-49f6-b7c1-3c06426712c4",
+      "name": "Format Output",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        -160
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googlePalmApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"contents\": [\n    {\n      \"parts\": [\n        {\n          \"text\": {{ JSON.stringify($json.completePrompt) }}\n        },\n        {\n          \"inline_data\": {\n            \"mime_type\": \"application/pdf\",\n            \"data\": \"{{ $input.item.binary.__PDF____.data }}\"\n          }\n        }\n      ]\n    }\n  ],\n  \"generationConfig\": {\n    \"temperature\": 0.3,\n    \"maxOutputTokens\": 20000,\n    \"topP\": 0.8,\n    \"topK\": 10\n  }\n}",
+        "options": {
+          "timeout": 240000
+        }
+      },
+      "id": "dba4cab2-004e-45f6-8bc4-5eb913fd47b4",
+      "name": "Gemini PDF to HTML",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        32,
+        -160
+      ],
+      "credentials": {
+        "googlePalmApi": {
+          "id": "mZXaguDyNenhYh5g",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// 准备PDF文件和完整的prompt，一步生成HTML\nconst formData = $input.first().json;\nconst binaryData = $input.first().binary;\n\nconst extraRequirements = formData.extraRequirements || '';\n\nconsole.log('Form data keys:', Object.keys(formData));\nconsole.log('Binary data available:', !!binaryData);\nconsole.log('Binary data keys:', binaryData ? Object.keys(binaryData) : 'None');\nconsole.log('Extra requirements:', extraRequirements);\n\n// 检查是否有PDF文件\nif (!binaryData || Object.keys(binaryData).length === 0) {\n  throw new Error('请上传PDF文件！');\n}\n\nconst pdfKey = Object.keys(binaryData)[0];\nconst pdfInfo = binaryData[pdfKey];\n\nconsole.log('PDF Info:', {\n  fileName: pdfInfo.fileName,\n  mimeType: pdfInfo.mimeType,\n  dataLength: pdfInfo.data ? pdfInfo.data.length : 0\n});\n\n// 构造完整的prompt，包含财报分析和HTML生成\nlet completePrompt = `You are an expert financial analyst and web developer. Please analyze the uploaded PDF financial report and create a comprehensive, professional HTML webpage based on the analysis.\n\n📋 TASK:\n1. Analyze all financial data in the PDF document\n2. Extract key metrics, trends, and insights\n3. Generate a complete HTML webpage with the analyzed data\n\n🎨 DESIGN REQUIREMENTS:\n1. Use Bento Grid visual design style with pure black background and Tencent blue color #006EFF for highlights\n2. Emphasize super large fonts or numbers to highlight key points, create visual contrast between large and small elements\n3. Mix Chinese and English - Chinese in large bold fonts, English as accent text\n4. Simple line graphics for data visualization and decorative elements\n5. Use highlight color transparency gradients for tech feeling, but different highlight colors should not gradient into each other\n6. Mimic Apple website animations, scroll-triggered effects\n7. Data can reference online chart components with consistent styling\n8. Use Framer Motion (via CDN)\n9. Use HTML5, TailwindCSS 3.0+ (via CDN) and necessary JavaScript\n10. Use professional icon libraries like Font Awesome or Material Icons (via CDN)\n11. Avoid using emoji as main icons\n12. Do not omit any content points from the financial analysis\n\n📊 CONTENT FOCUS:\n- Revenue figures and growth trends\n- Profit margins and financial ratios\n- Business segment performance\n- Strategic initiatives and highlights\n- Comparative data and year-over-year changes\n- Key operational metrics\n- Future outlook and guidance`;\n\n// 添加用户的额外需求\nif (extraRequirements && extraRequirements.trim()) {\n  completePrompt += `\n\n🎯 ADDITIONAL USER REQUIREMENTS:\n${extraRequirements}`;\n}\n\ncompletePrompt += `\n\n⚡ IMPORTANT OUTPUT REQUIREMENTS:\nGenerate MINIFIED HTML code in a single line without line breaks or unnecessary whitespace. The HTML should be production-ready and compressed. Include all CDN links, responsive design, smooth animations, and comprehensive financial data presentation. \n\nRemember: Output ONLY the compressed single-line HTML code ready for production use. Do not include markdown code blocks or explanations.`;\n\nreturn {\n  json: {\n    completePrompt: completePrompt,\n    extraRequirements: extraRequirements,\n    fileName: pdfInfo.fileName,\n    step: 'direct_pdf_to_html'\n  },\n  binary: binaryData\n};"
+      },
+      "id": "33d19b64-8287-43af-b67f-c020080db918",
+      "name": "Prepare PDF Analysis",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -240,
+        -160
+      ]
+    },
+    {
+      "parameters": {
+        "path": "pdf-financial-analyzer",
+        "formTitle": "PDF财报一键生成网页",
+        "formDescription": "直接上传PDF财报文件，AI将分析内容并生成专业网页（支持PDF直接处理）",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "上传PDF财报文件",
+              "fieldType": "file",
+              "multipleFiles": false,
+              "acceptFileTypes": ".pdf",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "额外需求（可选）",
+              "fieldType": "textarea"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "10b863ec-925f-440f-860c-5977c471afdc",
+      "name": "PDF上传表单",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.1,
+      "position": [
+        -464,
+        -160
+      ],
+      "webhookId": "pdf-financial-analyzer"
+    }
+  ],
+  "connections": {
+    "Format Output": {
+      "main": [
+        [
+          {
+            "node": "EdgeOne Pages HTML Deploy",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini PDF to HTML": {
+      "main": [
+        [
+          {
+            "node": "Format Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare PDF Analysis": {
+      "main": [
+        [
+          {
+            "node": "Gemini PDF to HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PDF上传表单": {
+      "main": [
+        [
+          {
+            "node": "Prepare PDF Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "9d759523d489cdc6a12d1d955972ae44ecb39da734f80a8e3abdbd12fbacf3eb"
+  }
+}

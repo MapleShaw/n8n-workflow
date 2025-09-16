@@ -1,0 +1,141 @@
+{
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "ca1bb9d9-c86a-4c21-88b3-efb3b99d4e26",
+      "name": "When clicking ‘Execute workflow’",
+      "type": "n8n-nodes-base.manualTrigger",
+      "position": [
+        688,
+        1488
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Generate AI Videos from Text Prompts with Google Veo\nThis n8n workflow uses the Google Gemini node to generate AI videos via the Veo model. It replaces complex manual API setups with a simple, plug-and-play experience.\n\n### Important Prerequisite\nTo use the Veo model, your Google Cloud project **must have billing enabled**. The feature is not available on the free tier and may incur charges.\n\n\n### Who Is This For?\n* **Marketers & Content Creators**\n  Quickly create B-roll, ad clips, or social content from text prompts.\n* **Filmmakers & Artists**\n  Prototype scenes and visualize ideas without filming.\n* **Anyone exploring AI video generation**\n  Use Google’s Veo model without any manual API work.\n\n### What the Workflow Does\n* **Define Prompt**\n  Write a text prompt in the `1. Set Video Prompt` node.\n* **Trigger**\n  Manually run the workflow with one click.\n* **Generate**\n  The Gemini node sends the prompt to the Veo model and generates a video.\n* **Output**\n  Returns a binary video file ready to save or share.\n\n### Setup Instructions\n**1. Enable Google Cloud Billing**\nMake sure your Google Cloud project has billing activated.\n**2. Add Credentials**\nAdd your Google AI (Gemini) credentials in n8n.\n**3. Set the Prompt**\nOpen the `1. Set Video Prompt` node and write your video idea.\n**4. Activate Workflow**\nSave and activate the workflow.\n**5. Run It**\nClick “Execute Workflow” to generate a video.\n\n### Requirements\n* n8n (Cloud or Self-Hosted)\n* Google Cloud Project with billing enabled\n* Google AI (Gemini) credentials linked to that project\n\n### Customization Ideas\n* **Save Output**\n  Add a Google Drive, Dropbox, or S3 node to store the video.\n* **Post Automatically**\n  Connect social media nodes (YouTube Shorts, TikTok, etc.) to publish content.\n\n* **Generate in Bulk**\n  Replace the Set node with Google Sheets or Airtable to generate multiple videos from a list of prompts.\n",
+        "height": 1168,
+        "width": 672
+      },
+      "id": "80db3987-73a3-4d0a-a61f-0c059f2a6258",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -368,
+        -128
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "**ACTION: (MANDATORY)** Write a descriptive prompt for the video you want to create in the 'Value' field of this node. Be specific for the best results!\n\n",
+        "height": 256,
+        "width": 320
+      },
+      "id": "a9b833d7-d46b-4ac8-b532-f367ce03207c",
+      "name": "Sticky Note1",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        992,
+        1408
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a6682a52-9305-44b9-813e-37eb58a0e13a",
+              "name": "prompt",
+              "type": "string",
+              "value": "[The camera completes a rapid arcing transition, slowing to a top-down view of a vast, aged parchment map. The map at this location features a detailed architectural blueprint of the entire Lujiazui financial district, including the Oriental Pearl Tower, surrounding skyscrapers, and the winding course of the Huangpu River, all inked in a shimmering, pearlescent substance.]\n\n[The sprawling blueprint, with intricate lines for each building and the river, is precisely overlaid on the map's geography.]\n\n[A feeling of a miniature metropolis being summoned from a historical canvas.]\n\n[The map appears endless. The complex, interconnected lines of the blueprint vibrate with a faint, contained energy, rather than casting a wide glow.]\n\n[The shimmering ink of the entire blueprint begins to coalesce and rise from the parchment, with the Huangpu River sinking as the skyscrapers construct themselves upwards into a detailed miniature model. After the entire district is fully formed as a diorama on the map, the camera performs a slow, high-angle orbit, showcasing the model-like skyscrapers and the surrounding parchment. In the final seconds, tiny model boats leave small wakes on the 3D river as the video ends, holding the shot of the living miniature.]\n\n[The sequence starts with a neutral map light, shifting to a bright, modern light during construction, which then softens into a beautiful light that perfectly illuminates the final diorama scene.]\n\n[Cinematic map animation, 3D map diorama, miniature world, tilt-shift effect.]\n"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e8b25951-9e9e-4a84-82e3-8c897fe5d6f1",
+      "name": "1. Set Video Prompt",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        1120,
+        1488
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "resource": "video",
+        "modelId": {
+          "__rl": true,
+          "value": "models/veo-3.0-fast-generate-preview",
+          "mode": "list",
+          "cachedResultName": "models/veo-3.0-fast-generate-preview"
+        },
+        "prompt": "={{ $json.prompt }}",
+        "options": {
+          "durationSeconds": 5
+        }
+      },
+      "id": "36074965-8554-45c0-99ea-f530a065b46b",
+      "name": "2. Generate Video with Veo",
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "position": [
+        1632,
+        1488
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "mZXaguDyNenhYh5g",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "This node sends your text prompt to Google's Veo model to generate a video.\n**Note:** This step will fail if billing is not enabled on your Google Cloud project.",
+        "height": 336,
+        "width": 288
+      },
+      "id": "23c1ebba-25e5-4faa-aaa4-42cc6ec24d2d",
+      "name": "Sticky Note2",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1536,
+        1344
+      ],
+      "typeVersion": 1
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "1. Set Video Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "1. Set Video Prompt": {
+      "main": [
+        [
+          {
+            "node": "2. Generate Video with Veo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "9d759523d489cdc6a12d1d955972ae44ecb39da734f80a8e3abdbd12fbacf3eb"
+  }
+}

@@ -1,0 +1,163 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -240,
+        -128
+      ],
+      "id": "739bb9f0-9def-470e-b64a-b3f2bb1ed7c0",
+      "name": "When chat message received",
+      "webhookId": "a502477e-167c-4ec1-807b-3afdec574bee"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "You are an AI assistant with access to Firecrawl MCP tools. You MUST\n  follow this exact process:\n\n  **Process:**\n  1. ALWAYS start by calling \"Firecrawl MCP List\" to see what tools are\n   available\n  2. ONLY after seeing the available tools, decide which tool to\n  execute\n  3. Then call \"Firecrawl MCP Execute\" with the appropriate parameters\n\n  **Tools:**\n  - Firecrawl MCP List: Lists all available tools and their\n  capabilities\n  - Firecrawl MCP Execute: Executes a specific tool with given\n  parameters\n\n  **Rules:**\n  - You MUST call Firecrawl MCP List first in every conversation\n  - You can only call one tool at a time\n  - After listing tools, analyze the user's request and choose the most\n   appropriate tool\n  - Never assume you know what tools are available - always check first"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        -16,
+        -128
+      ],
+      "id": "df275456-2b1b-465a-953d-db0c831fd792",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatDeepSeek",
+      "typeVersion": 1,
+      "position": [
+        -96,
+        144
+      ],
+      "id": "ce5e425f-62ba-4036-81de-e07c2f50eede",
+      "name": "DeepSeek Chat Model",
+      "credentials": {
+        "deepSeekApi": {
+          "id": "MC8wV3sOhyPFXbS9",
+          "name": "DeepSeek account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        80,
+        144
+      ],
+      "id": "a3e634d3-f658-4491-a3b0-a2db5fe8843b",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-mcp.mcpClientTool",
+      "typeVersion": 1,
+      "position": [
+        432,
+        128
+      ],
+      "id": "d886ae8a-3a27-40f3-b83f-947ef6260234",
+      "name": "Firecrawl MCP List",
+      "credentials": {
+        "mcpClientApi": {
+          "id": "DGCqgfWL3fxHzGlo",
+          "name": "Firecrawl Config"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeTool",
+        "toolName": "={{ $fromAI('toolname') }}",
+        "toolParameters": "={{ $fromAI('Tool_Parameters', '', 'json') }}"
+      },
+      "type": "n8n-nodes-mcp.mcpClientTool",
+      "typeVersion": 1,
+      "position": [
+        224,
+        112
+      ],
+      "id": "eb9dc632-431f-4065-a5c6-f2e33c1a3240",
+      "name": "Firecrawl MCP Execute",
+      "credentials": {
+        "mcpClientApi": {
+          "id": "DGCqgfWL3fxHzGlo",
+          "name": "Firecrawl Config"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DeepSeek Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Firecrawl MCP List": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Firecrawl MCP Execute": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "9d759523d489cdc6a12d1d955972ae44ecb39da734f80a8e3abdbd12fbacf3eb"
+  }
+}
